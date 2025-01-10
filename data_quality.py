@@ -23,9 +23,8 @@ frequency = config.freq
 spark = SparkSession.builder.appName("Data Quality Check").getOrCreate()
 
 def send_msg_to_telegram(msg):
-    url = f"https://api.telegram.org/bot7342706784:AARkdnM5peDShhYRA2mU-i1c927bDo5JAIE/sendMessage?chat_id=4566817784&text={msg}"
-    proxy_server = "http://10.144.13.144:3129"
-    return subprocess.run(['curl', '-x', proxy_server, url])
+    url = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN ']} /sendMessage?chat_id={os.environ['TELEGRAM_CHAT_ID']}&text={msg}"
+    return subprocess.run(['curl', '-x', url])
 
 # def read_data_from_singlestore():
 #     
@@ -42,19 +41,26 @@ def load_historical_data():
     """
     )
 
+
+
 # Step 1: Query current metrics
 def query_current_metrics():
     return spark.sql(
         """
-        SELECT 
-            'metric_1' AS metric_name, 
-            COUNT(*) AS metric_value
-        FROM current_table
-        UNION ALL
-        SELECT 
-            'metric_2' AS metric_name, 
-            AVG(column_x) AS metric_value
-        FROM current_table
+        WITH current_data AS (
+            SELECT 
+                'ExampleName' AS name,
+                CURRENT_DATE AS date,
+                COUNT(*) AS row_count,
+                'ExampleMetric' AS metric,
+                AVG(column_name) AS metric_value
+            FROM 
+                your_table
+            WHERE 
+                some_condition
+            GROUP BY 
+                'ExampleName', CURRENT_DATE
+        )
     """
     )
 
