@@ -1,10 +1,3 @@
-# cần 1 query để return ra tất cả những result mong muốn (metric value, row count, timestamp) -> check kết quả với giá trị quá khứ
-# step 0: kéo dữ liệu quá khứ -> lưu vào 1 bảng
-# step 1: query các result mong muốn với dữ liệu hiện tại 
-# step 2: so sánh các result của dữ liệu hiện tại với dữ liệu quá khứ, pass/fail -> lưu vào bảng
-# step 3: gửi thông báo qua telegram
-# viết script generate 1 file config
-
 from pyspark.sql import SparkSession, functions as F
 import subprocess
 import time
@@ -13,21 +6,18 @@ import os
 import config 
 from pyspark.sql.functions import col, lit, when, current_timestamp
 
-
-
 timestamp_column = config.timestamp_column  # Replace with the actual timestamp column name
 cutoff_time = "12:00:00"  # Cutoff time for data readiness
 frequency = config.freq
 
 # Initialize Spark session
-spark = SparkSession.builder.appName("Data Quality Check").getOrCreate()
+spark = SparkSession.builder.appName("Data quality check").getOrCreate()
 
 def send_msg_to_telegram(msg):
-    url = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN ']} /sendMessage?chat_id={os.environ['TELEGRAM_CHAT_ID']}&text={msg}"
+    url = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']} /sendMessage?chat_id={os.environ['TELEGRAM_CHAT_ID']}&text={msg}"
     return subprocess.run(['curl', '-x', url])
 
-# def read_data_from_singlestore():
-#     
+# def read_data():
 
 def count_rows(df):
     return df.count()
@@ -40,8 +30,6 @@ def load_historical_data():
         FROM historical_metrics
     """
     )
-
-
 
 # Step 1: Query current metrics
 def query_current_metrics():
@@ -101,5 +89,4 @@ if __name__ == "__main__":
         .mode("overwrite") \
         .format("parquet") \
         .saveAsTable("comparison_results")
-    
     print("Optimized comparison completed and results saved to 'comparison_results' table.")
